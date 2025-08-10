@@ -22,6 +22,9 @@ use std::{
     str::FromStr,
 };
 
+use url::Url;
+use tauri::http::{Response, ResponseBuilder};
+
 use rusqlite::{params, params_from_iter, Connection, Transaction};
 use sysinfo::System;
 use tauri::{
@@ -200,6 +203,39 @@ async fn main() -> Result<()> {
             // }
 
             Ok(())
+        })
+        .register_uri_scheme_protocol("loalogs", |app_handle, request| {
+            // The full URL will be like: "loalogs://logs/123"
+            let url = request.uri();
+
+            // Parse the path part after the scheme and authority
+            // For example, "loalogs://logs/123" -> "/logs/123"
+            // Using the `url` crate helps:
+            let parsed_url = url::Url::parse(url).map_err(|e| e.to_string())?;
+
+            let path = parsed_url.path(); // "/logs/123"
+
+            if let Some(captures) = path.strip_prefix("/logs/") {
+                if let Ok(id) = captures.parse::<i32>() {
+                    // Emit event with id as integer
+                    let _ = app_handle.emit_all("show-latest-encounter", id);
+
+                    let response = ResponseBuilder::new()
+                        .status(200)
+                        .mimetype("text/plain")
+                        .body(format!("Accepted id: {}", id).into_bytes())?;
+
+                    return Ok(response);
+                }
+            }
+
+            // If not matching, respond with 404
+            let response = ResponseBuilder::new()
+                .status(404)
+                .mimetype("text/plain")
+                .body("Not Found".as_bytes().to_vec())?;
+
+            Ok(response)
         })
         .plugin(
             tauri_plugin_window_state::Builder::new()
