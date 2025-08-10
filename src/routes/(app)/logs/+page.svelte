@@ -4,7 +4,8 @@
   import { encounterFilter, settings } from "$lib/stores.svelte";
   import { type EncountersOverview } from "$lib/types";
   import { invoke } from "@tauri-apps/api";
-  import { untrack } from "svelte";
+  import { listen } from "@tauri-apps/api/event";
+  import { untrack, onMount } from "svelte";
   import { SvelteSet } from "svelte/reactivity";
   import Header from "../Header.svelte";
   import EncountersTable from "./EncountersTable.svelte";
