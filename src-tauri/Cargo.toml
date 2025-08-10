@@ -37,8 +37,8 @@ moka = { version = "0.12.7", features = ["sync"] }
 rsntp = { version = "4.0.0", default-features = false, features = ["chrono"]  }
 flate2 = "1.0.30"
 sysinfo = "0.35.1"
+url = "2"
 #meter-core = { git = "https://github.com/snoww/meter-core-rs", optional = true }
-tiny_http = "0.12"
 
 [features]
 # by default Tauri runs in production mode

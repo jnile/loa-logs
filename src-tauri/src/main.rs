@@ -22,8 +22,7 @@ use std::{
     str::FromStr,
 };
 
-// use std::thread;
-// use tiny_http::{Server, Response};
+use url::Url;
 use tauri::http::{Response, ResponseBuilder};
 
 use rusqlite::{params, params_from_iter, Connection, Transaction};
@@ -182,33 +181,6 @@ async fn main() -> Result<()> {
 
             remove_driver();
 
-            // Test app url calls from browser
-            // let thread_handle = app.handle();
-
-            // thread::spawn(move || {
-            //     let server = Server::http("127.0.0.1:3030").unwrap();
-            //     println!("Dev HTTP server running at http://127.0.0.1:3030");
-
-            //     for request in server.incoming_requests() {
-            //         let url = request.url().to_string();
-
-            //         // Only accept /logs/<id>
-            //         if let Some(captures) = url.strip_prefix("/logs/") {
-            //             if let Ok(id) = captures.parse::<i32>() {
-            //                 // Emit event with id as integer
-            //                 let _ = thread_handle.emit_all("show-latest-encounter", id);
-            //                 let response = Response::from_string(format!("Accepted id: {}", id));
-            //                 let _ = request.respond(response);
-            //                 continue;
-            //             }
-            //         }
-
-            //         // If not matching, respond with 404
-            //         let response = Response::from_string("Not Found").with_status_code(404);
-            //         let _ = request.respond(response);
-            //     }
-            // });
-
             // only start listening if we have live meter
             #[cfg(feature = "meter-core")]
             {
@@ -232,12 +204,12 @@ async fn main() -> Result<()> {
 
             Ok(())
         })
-        .register_uri_scheme_protocol("myapp", |app_handle, request| {
-            // The full URL will be like: "myapp://logs/123"
+        .register_uri_scheme_protocol("loalogs", |app_handle, request| {
+            // The full URL will be like: "loalogs://logs/123"
             let url = request.uri();
 
             // Parse the path part after the scheme and authority
-            // For example, "myapp://logs/123" -> "/logs/123"
+            // For example, "loalogs://logs/123" -> "/logs/123"
             // Using the `url` crate helps:
             let parsed_url = url::Url::parse(url).map_err(|e| e.to_string())?;
 
@@ -251,7 +223,7 @@ async fn main() -> Result<()> {
                     let response = ResponseBuilder::new()
                         .status(200)
                         .mimetype("text/plain")
-                        .body(format!("Accepted id: {}", id).into_bytes());
+                        .body(format!("Accepted id: {}", id).into_bytes())?;
 
                     return Ok(response);
                 }
@@ -261,7 +233,7 @@ async fn main() -> Result<()> {
             let response = ResponseBuilder::new()
                 .status(404)
                 .mimetype("text/plain")
-                .body("Not Found".as_bytes().to_vec());
+                .body("Not Found".as_bytes().to_vec())?;
 
             Ok(response)
         })
