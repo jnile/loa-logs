@@ -205,37 +205,28 @@ async fn main() -> Result<()> {
             Ok(())
         })
         .register_uri_scheme_protocol("loalogs", |app_handle, request| {
-            // The full URL will be like: "loalogs://logs/123"
-            let url = request.uri();
+            let url_str = request.uri();
 
-            // Parse the path part after the scheme and authority
-            // For example, "loalogs://logs/123" -> "/logs/123"
-            // Using the `url` crate helps:
-            let parsed_url = url::Url::parse(url).map_err(|e| e.to_string())?;
+            // Parse using the `url` crate
+            if let Ok(parsed_url) = Url::parse(url_str) {
+                if let Some(id_str) = parsed_url.path().strip_prefix("/logs/") {
+                    if let Ok(id) = id_str.parse::<i32>() {
+                        // Emit event
+                        let _ = app_handle.emit_all("show-latest-encounter", id);
 
-            let path = parsed_url.path(); // "/logs/123"
-
-            if let Some(captures) = path.strip_prefix("/logs/") {
-                if let Ok(id) = captures.parse::<i32>() {
-                    // Emit event with id as integer
-                    let _ = app_handle.emit_all("show-latest-encounter", id);
-
-                    let response = ResponseBuilder::new()
-                        .status(200)
-                        .mimetype("text/plain")
-                        .body(format!("Accepted id: {}", id).into_bytes())?;
-
-                    return Ok(response);
+                        return ResponseBuilder::new()
+                            .status(200)
+                            .mimetype("text/plain")
+                            .body(format!("Accepted id: {}", id).into_bytes());
+                    }
                 }
             }
 
-            // If not matching, respond with 404
-            let response = ResponseBuilder::new()
-                .status(404)
+            // Fallback: bad request
+            ResponseBuilder::new()
+                .status(400)
                 .mimetype("text/plain")
-                .body("Not Found".as_bytes().to_vec())?;
-
-            Ok(response)
+                .body(b"Invalid request".to_vec())
         })
         .plugin(
             tauri_plugin_window_state::Builder::new()

@@ -138,6 +138,21 @@
 							   Value="1"
 							   KeyPath="yes" />
             </Component>
+
+            <Component Id="LoaLogsProtocol" Guid="071e2da5-fa64-43f5-803a-f0df930fdf7b" Win64="$(var.Win64)">
+                <RegistryKey Root="HKCU" Key="Software\Classes\loalogs" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+                    <RegistryValue Name="" Value="URL:LoaLogs Protocol" Type="string" KeyPath="yes" />
+                    <RegistryValue Name="URL Protocol" Value="" Type="string" />
+
+                    <RegistryKey Key="DefaultIcon">
+                        <RegistryValue Name="" Value="[INSTALLDIR]{{{product_name}}}.exe,1" Type="string" />
+                    </RegistryKey>
+
+                    <RegistryKey Key="shell\open\command">
+                        <RegistryValue Name="" Value="&quot;[INSTALLDIR]{{{product_name}}}.exe&quot; &quot;%1&quot;" Type="string" />
+                    </RegistryKey>
+                </RegistryKey>
+            </Component>
         </DirectoryRef>
 
         <DirectoryRef Id="ApplicationProgramsFolder">
@@ -207,6 +222,8 @@
             <ComponentRef Id="{{ bin.id }}"/>
             {{/each~}}
             </Feature>
+
+            <ComponentRef Id="LoaLogsProtocol"/>
         </Feature>
 
         <Feature Id="External" AllowAdvertise="no" Absent="disallow">
